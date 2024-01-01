@@ -33,7 +33,6 @@ export default async function handler(req: any, res: any) {
         whereClause += `${key} ${operator} ${value}`;
         
       }
-      console.log(whereClause);
     }
     const result = await client.query('SELECT start_time, end_time, title, color from public.events' + whereClause);
     const items = result.rows;
