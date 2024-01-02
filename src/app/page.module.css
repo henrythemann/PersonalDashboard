@@ -7,6 +7,7 @@
   transform: translate(-50%, -50%);
   border: 2px solid;
   display: flex;
+  flex-direction: column;
 }
 .calendarContainer {
   width: 500px;
@@ -28,6 +29,7 @@
   column-gap: 0px;    
   row-gap: 0px;
   flex: 5;
+  user-select: none;
 }
 .calendarGridItem {
   border: 1px solid;
@@ -85,7 +87,6 @@
   line-height: 24px;
   border-radius: 50%;
   font-size: 12px;
-  font-weight: 500;
   letter-spacing: .3px;
   display: inline-block;
   text-align: center;

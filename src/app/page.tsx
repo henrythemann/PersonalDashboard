@@ -1,8 +1,10 @@
 'use client';
 import styles from './page.module.css'
-import { Ref, RefObject, useRef, useState, useEffect, FormEvent } from 'react';
-import useDraggable from './hooks/useDraggable';
-import { Event, Events, SplitDate } from './interfaces';
+import { useRef, useState, useEffect, FormEvent } from 'react';
+import WeatherWidget from './components/weather-widget';
+import CalendarGrid from './components/calendar-grid';
+import CalendarHeader from './components/calendar-header';
+import { Event, SplitDate } from './interfaces';
 
 export default function Dashboard() {
   return (<>
@@ -10,20 +12,7 @@ export default function Dashboard() {
   <WeatherWidget />
   </>);
 }
-function WeatherWidget() {
-  const weatherWidgetContainer = useRef<HTMLDivElement | null>(null);
-  const [movingWeatherWidget, setMovingWeatherWidget] = useState({moving: false, Xoffset: 0, Yoffset: 0});
-  // async function getWeather(position: { coords: { latitude: any; longitude: any; }; }) {
-  //   const response = await fetch(`https://api.weather.gov/points/${position.coords.latitude},${position.coords.longitude}`);const urls = await response.json();
-  //   const response2 = await fetch(urls.properties.forecast);
-  //   console.log(response2);
-  // }
-  // navigator.geolocation.getCurrentPosition(getWeather);
-  useDraggable(weatherWidgetContainer, movingWeatherWidget, setMovingWeatherWidget, styles.weatherWidgetContainer, styles.weatherWidgetHeader);
-  return (<>
-  <div className={styles.weatherWidgetContainer} ref={weatherWidgetContainer}></div>
-  </>);
-}
+
 function Calendar() {
   const today = new Date();
   const [monthIndex, setMonthIndex] = useState(today.getMonth());
@@ -174,17 +163,16 @@ function Calendar() {
     );
   };
 
-  const createEvent = (formData: {start_time: number, end_time: number, title: string, color: string}) => {
+  async function createEvent(formData: {start_time: number, end_time: number, title: string, color: string}) {
     setIsEventPopupVisible(false);
-    fetch(`/api/events/add?start_time=${formData.start_time}&end_time=${formData.end_time}&title=${formData.title}`)
-    .then((response) => response.json())
-    .then((data) => {
+    try {
+      const response = await fetch(`/api/events/add?start_time=${formData.start_time}&end_time=${formData.end_time}&title=${formData.title}`)
+      const data = await response.json();
       formData.color = "0000ff";
       setEventData([...eventData, formData]);
-    })
-    .catch((error) => {
+    } catch (error) {
       console.error('Error adding event:', error);
-    });
+    }
   }
 
   return (<>
@@ -196,109 +184,4 @@ function Calendar() {
     {isDatePopupVisible && <DatePopup position={getDatePopupPosition()} />}
     {isEventPopupVisible && <EventPopup position={eventPopupPosition.current} handleSubmit={createEvent}/>}
   </>)
-}
-
-function CalendarHeader({month, monthIndex, year, isDatePopupVisible, setMonthIndex, setYear, setIsDatePopupVisible, titleButtonsRef, setDatePopupContents, calendarContainer, lastDatePopupClicked, monthButtonRef, yearButtonRef}: { monthIndex: number, month: string, year: number, isDatePopupVisible: boolean, setMonthIndex: Function, setYear: Function, setIsDatePopupVisible: Function, titleButtonsRef: Ref<HTMLDivElement>, setDatePopupContents: Function, calendarContainer: RefObject<HTMLDivElement>, lastDatePopupClicked: RefObject<HTMLButtonElement>, monthButtonRef: RefObject<HTMLButtonElement>, yearButtonRef: RefObject<HTMLButtonElement>}) {
-  const [movingCalendar, setMovingCalendar] = useState({moving: false, Xoffset: 0, Yoffset: 0});
-
-  const navigate = (forward: boolean) => {
-    if (monthIndex === (forward ? 11 : 0)) {
-      setMonthIndex(forward ? 0 : 11);
-      setYear(year + (forward ? 1 : -1));
-    } else {
-      setMonthIndex(monthIndex + (forward ? 1 : -1));
-    }
-  };
-  
-  const toggleDatePopup = (popupContents: string, buttonRef: React.RefObject<HTMLButtonElement>) => {
-    if (!isDatePopupVisible && lastDatePopupClicked !== null) {
-      (lastDatePopupClicked as any).current = buttonRef.current;
-    }
-    setIsDatePopupVisible(!isDatePopupVisible);
-    setDatePopupContents(popupContents);
-  };
-
-  useDraggable(calendarContainer, movingCalendar, setMovingCalendar, styles.calendarHeader, styles.titleButton);
-  
-  return (<>
-    <div className={styles.calendarHeader}>
-      <button className={[styles.monthNavigation, styles.backButton].join(' ')} onClick={() => navigate(false)}>&#60;</button>
-      <button className={[styles.monthNavigation, styles.nextButton].join(' ')} onClick={() => navigate(true)}>&#62;</button>
-      <div className={styles.calendarTitle} ref={titleButtonsRef}>
-        <button className={[styles.calendarMonth, styles.titleButton].join(' ')} ref={monthButtonRef} onClick={() => toggleDatePopup('month', monthButtonRef)}>{month}</button>
-        <span> </span>
-        <button className={[styles.calendarYear, styles.titleButton].join(' ')} ref={yearButtonRef} onClick={() => toggleDatePopup('year', yearButtonRef)}>{year}</button>
-      </div>
-    </div>
-    </>);
-}
-
-function CalendarGrid({monthIndex, year, dayNames, toggleEventPopup, eventData, setEventData}: {monthIndex: number, year: number, dayNames: string[], toggleEventPopup: Function, eventData: Event[], setEventData: Function}) {
-  const date = new Date(year, monthIndex + 1, 0);
-  const daysInMonth = date.getDate();
-  const prevMonthIndex = monthIndex === 0 ? 11 : monthIndex - 1;
-  const prevYear = monthIndex === 0 ? year - 1 : year;
-  const daysInPrevMonth = new Date(prevYear, prevMonthIndex + 1, 0).getDate();
-  const firstDayOfWeek = new Date(year, monthIndex, 1).getDay()
-  let highlightDay =-1;
-  const today = new Date();
-  if (year === today.getFullYear() && monthIndex === today.getMonth()) {
-    highlightDay = today.getDate();
-  }
-  useEffect(() => {
-    let startUtcTimestamp = Date.UTC(year, monthIndex, 1) - firstDayOfWeek * 24 * 60 * 60 * 1000;
-    fetch(`/api/events/get?start_time=${startUtcTimestamp}&end_time=${startUtcTimestamp + 42 * 24 * 60 * 60 * 1000}`)
-    .then((response) => response.json())
-    .then((data) => {
-      setEventData(data);
-    })
-    .catch((error) => {
-      console.error('Error fetching events:', error);
-    });
-  },
-  [monthIndex]);
-  
-  return (<>
-    <div className={styles.calendarGrid}>
-      {[...Array(7).keys()].map((i) => {
-        return <div key={i} className={[styles.calendarGridItem, styles.dayName].join(' ')}>{dayNames[i]}</div>
-      })}
-      {[...Array(42).keys()].map((i) => {
-        i = i - firstDayOfWeek + 1;
-        let style = styles.calendarGridItem;
-        let spanStyle = '';
-        let events: Events = {};
-        let dayNumber = i;
-        let monthOfDayNumber = monthIndex;
-        let yearOfDayNumber = year;
-
-        if (i < 1) {
-          style = [styles.calendarGridItem, styles.empty].join(' ');
-          dayNumber = daysInPrevMonth + i;
-          monthOfDayNumber = prevMonthIndex;
-          yearOfDayNumber = prevYear;
-        } else if (i === highlightDay) {
-          spanStyle = styles.today;
-        } else if (i > daysInMonth) {
-          style = [styles.calendarGridItem, styles.empty].join(' ');
-          dayNumber = i - daysInMonth;
-          monthOfDayNumber = monthIndex === 11 ? 0 : monthIndex + 1;
-          yearOfDayNumber = monthIndex === 11 ? year + 1 : year;
-        }
-        for (let event of eventData) {
-          if (event.start_time >= Date.UTC(yearOfDayNumber, monthOfDayNumber, dayNumber) && event.end_time < Date.UTC(yearOfDayNumber, monthOfDayNumber, dayNumber + 1)) {
-            events[yearOfDayNumber] ??= {};
-            events[yearOfDayNumber][monthOfDayNumber] ??= {};
-            events[yearOfDayNumber][monthOfDayNumber][dayNumber] ??= [];
-            
-            events[yearOfDayNumber][monthOfDayNumber][dayNumber].push(event);
-          }
-        }
-        return <div key={i} className={style} onClick={(e) => toggleEventPopup(dayNumber, monthOfDayNumber, yearOfDayNumber, e)}><span className={spanStyle}>{dayNumber}</span>
-        {events[yearOfDayNumber]?.[monthOfDayNumber]?.[dayNumber] && [...events[yearOfDayNumber][monthOfDayNumber][dayNumber]].map((event, i) => {return <div key={i} className={styles.event} style={{background: "#"+event.color}}>{event.title}</div>})}
-        </div>
-        }
-      )}
-  </div>
-  </>);
 }
