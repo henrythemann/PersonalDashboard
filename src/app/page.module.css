@@ -100,6 +100,7 @@
   position: absolute;
   display: flex;
   flex-direction: column;
+  background-color: #000000db;
 }
 .popupMenu > button {
   background-color: #b3b3b3;

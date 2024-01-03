@@ -168,7 +168,7 @@ function Calendar() {
     try {
       const response = await fetch(`/api/events/add?start_time=${formData.start_time}&end_time=${formData.end_time}&title=${formData.title}`)
       const data = await response.json();
-      formData.color = "0000ff";
+      formData.color = "ffb300";
       setEventData([...eventData, formData]);
     } catch (error) {
       console.error('Error adding event:', error);

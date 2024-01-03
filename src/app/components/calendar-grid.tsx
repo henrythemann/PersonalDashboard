@@ -58,7 +58,10 @@ export default function CalendarGrid({monthIndex, year, dayNames, toggleEventPop
           }
           if (eventData.length) {
             for (let event of eventData) {
-              if (event.start_time >= Date.UTC(yearOfDayNumber, monthOfDayNumber, dayNumber) && event.end_time < Date.UTC(yearOfDayNumber, monthOfDayNumber, dayNumber + 1)) {
+              if (dayNumber === 1 && monthOfDayNumber === 0) {
+                console.log(`${event.start_time} >= ${Date.UTC(yearOfDayNumber, monthOfDayNumber, dayNumber) + today.getTimezoneOffset() * 60 * 1000} && ${event.end_time} < ${Date.UTC(yearOfDayNumber, monthOfDayNumber, dayNumber + 1) + today.getTimezoneOffset() * 60 * 1000}`);
+              }
+              if (event.start_time >= Date.UTC(yearOfDayNumber, monthOfDayNumber, dayNumber) && event.end_time < Date.UTC(yearOfDayNumber, monthOfDayNumber, dayNumber + 1) + today.getTimezoneOffset() * 60 * 1000) {
                 events[yearOfDayNumber] ??= {};
                 events[yearOfDayNumber][monthOfDayNumber] ??= {};
                 events[yearOfDayNumber][monthOfDayNumber][dayNumber] ??= [];
