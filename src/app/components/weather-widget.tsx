@@ -36,6 +36,11 @@ export default function WeatherWidget() {
     }, []);
     useDraggable(weatherWidgetContainer, movingWeatherWidget, setMovingWeatherWidget, styles.weatherWidgetContainer, styles.weatherWidgetHeader);
     return (<>
-        <div className={styles.weatherWidgetContainer} ref={weatherWidgetContainer}>{forecastData.properties.periods[0].name}'s Weather for {weatherCityState.city}, {weatherCityState.state}<div>{forecastData.properties.periods[0].detailedForecast}</div></div>
+        <div className={styles.weatherWidgetContainer} ref={weatherWidgetContainer}>
+        {forecastData.properties.periods[0].detailedForecast && (<>
+        {forecastData.properties.periods[0].name}'s Weather for {weatherCityState.city}, {weatherCityState.state
+        }</>) }
+        {!(forecastData.properties.periods[0].detailedForecast) && (<>Loading weather...</>) }
+        <div>{forecastData.properties.periods[0].detailedForecast}</div></div>
     </>);
   }
