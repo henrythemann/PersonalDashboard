@@ -26,94 +26,96 @@ export default function Calendar() {
     const [eventData, setEventData] = useState<Event[]>([]);
   
     const handleYearLoad = (loadFutureYears: boolean) => {
-      setYearRange(prev => ({ start: prev.start + (loadFutureYears ? 10 : -10) , end: prev.end + (loadFutureYears ? 10 : -10) }));
-      };
+        setYearRange(prev => ({ start: prev.start + (loadFutureYears ? 10 : -10) , end: prev.end + (loadFutureYears ? 10 : -10) }));
+    };
   
     const DatePopup = ({ position }: {position: {top: number, left: number, width: number}}) => {
-      return (
-        <>
-        <div className={[styles.popupMenu, datePopupContents == 'year' ? styles.yearSelector : ''].join(' ')} ref={menuRef} style={{ top: position.top, left: position.left, minWidth: position.width }}>
-          {isDatePopupVisible && datePopupContents == 'month' && [...monthNames].map((month, i) => (
-            <button key={i} className={styles.monthSelectorItem} onClick={() => {
-              setMonthIndex(i);
-              setIsDatePopupVisible(false);
-            }}>{month}</button>
-            ))}
-          {isDatePopupVisible && datePopupContents == 'year' && (
-          <>
-          <button className={styles.yearLoadButton} onClick={() => handleYearLoad(false)}>↑</button>
-          {[...Array(yearRange.end - yearRange.start + 1)].map((_, i) => {
-            
-            const year = i + yearRange.start;
-            return <button key={i} className={styles.monthSelectorItem} onClick={() => {
-              setYear(year);
-              setIsDatePopupVisible(false);
-            }}>{year}</button>
-          })}<button className={styles.yearLoadButton} onClick={() => handleYearLoad(true)}>↓</button></>)}
-        </div>
-        </>
-      );
+        return (
+            <>
+            <div className={[styles.popupMenu, datePopupContents == 'year' ? styles.yearSelector : ''].join(' ')} ref={menuRef} style={{ top: position.top, left: position.left, minWidth: position.width }}>
+            {isDatePopupVisible && datePopupContents == 'month' && [...monthNames].map((month, i) => (
+                <button key={i} className={styles.monthSelectorItem} onClick={() => {
+                    setMonthIndex(i);
+                    setIsDatePopupVisible(false);
+                }}>{month}</button>
+                ))}
+                {isDatePopupVisible && datePopupContents == 'year' && (
+                    <>
+                    <button className={styles.yearLoadButton} onClick={() => handleYearLoad(false)}>↑</button>
+                    {[...Array(yearRange.end - yearRange.start + 1)].map((_, i) => {
+                        
+                        const year = i + yearRange.start;
+                        return <button key={i} className={styles.monthSelectorItem} onClick={() => {
+                            setYear(year);
+                            setIsDatePopupVisible(false);
+                        }}>{year}</button>
+                    })}<button className={styles.yearLoadButton} onClick={() => handleYearLoad(true)}>↓</button></>)}
+            </div>
+            </>
+        );
     };
     
     const getDatePopupPosition = () => {
-      if (titleButtonsRef.current === null) return { top: 0, left: 0, width: 0 };
-      const rect = titleButtonsRef.current.getBoundingClientRect();
-      return {
-        top: rect.bottom + window.scrollY,
-        left: rect.left + window.scrollX,
-        width: rect.width
-      };
+        if (titleButtonsRef.current === null) return { top: 0, left: 0, width: 0 };
+        const rect = titleButtonsRef.current.getBoundingClientRect();
+        return {
+            top: rect.bottom + window.scrollY,
+            left: rect.left + window.scrollX,
+            width: rect.width
+        };
     };
     
     useEffect(() => {
-      const handleClickOutside = (event: { target: any; }) => {
-        if (isDatePopupVisible && menuRef.current !== null && !(menuRef.current.contains(event.target)) && lastDatePopupClicked.current !== null && !(lastDatePopupClicked.current.contains(event.target))) {
-          setIsDatePopupVisible(false);
-        }
-      };  
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
+        const handleClickOutside = (event: { target: any; }) => {
+            if (isDatePopupVisible && menuRef.current !== null && !(menuRef.current.contains(event.target)) && lastDatePopupClicked.current !== null && !(lastDatePopupClicked.current.contains(event.target))) {
+                setIsDatePopupVisible(false);
+            }
+        };  
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
     }, [isDatePopupVisible, menuRef]);
   
     const toggleEventPopup = (day: number, month: number, year: number, event: {clientX: number, clientY: number}) => {
-      setIsEventPopupVisible(!isEventPopupVisible);
-      eventPopUpDate.current.day = day;
-      eventPopUpDate.current.month = month;
-      eventPopUpDate.current.year = year;
-      eventPopupPosition.current.x = event.clientX;
-      eventPopupPosition.current.y = event.clientY;
+        setIsEventPopupVisible(!isEventPopupVisible);
+        eventPopUpDate.current.day = day;
+        eventPopUpDate.current.month = month;
+        eventPopUpDate.current.year = year;
+        eventPopupPosition.current.x = event.clientX;
+        eventPopupPosition.current.y = event.clientY;
     }
   
     // TODO: add form validation on empty event names and end time before start time
     const EventPopup = ({ position, handleSubmit }: {position: {x: number, y: number}, handleSubmit: Function}) => {
-      const callAddEvent = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const formData = new FormData(event.currentTarget);
-        let startHour = +(formData.get('startHour') ?? 0);
-        let startMin = +(formData.get('startMin') ?? 0);
-        let startAMPM = formData.get('startAMPM');
-        let endHour = +(formData.get('endHour') ?? 0);
-        let endMin = +(formData.get('endMin') ?? 0);
-        let endAMPM = formData.get('endAMPM');
-        if (startHour === 12 && startAMPM === 'AM') startHour = 0;
-        else if (startAMPM === 'PM') startHour += 12;
-        if (endHour === 12 && endAMPM === 'AM') endHour = 0;
-        else if (endAMPM === 'PM') endHour += 12;
-        const startTime = Date.UTC(eventPopUpDate.current.year, eventPopUpDate.current.month, eventPopUpDate.current.day, startHour, startMin) + today.getTimezoneOffset() * 60 * 1000;
-        const endTime = Date.UTC(eventPopUpDate.current.year, eventPopUpDate.current.month, eventPopUpDate.current.day, endHour, endMin) + today.getTimezoneOffset() * 60 * 1000;
-        const eventData = {
-            start_time: startTime,
-            end_time: endTime,
-            title: formData.get('eventTitle'),
+        const callAddEvent = (event: FormEvent<HTMLFormElement>) => {
+            event.preventDefault();
+            const formData = new FormData(event.currentTarget);
+            let startHour = +(formData.get('startHour') ?? 0);
+            let startMin = +(formData.get('startMin') ?? 0);
+            let startAMPM = formData.get('startAMPM');
+            let endHour = +(formData.get('endHour') ?? 0);
+            let endMin = +(formData.get('endMin') ?? 0);
+            let endAMPM = formData.get('endAMPM');
+            if (startHour === 12 && startAMPM === 'AM') startHour = 0;
+            else if (startAMPM === 'PM') startHour += 12;
+            if (endHour === 12 && endAMPM === 'AM') endHour = 0;
+            else if (endAMPM === 'PM') endHour += 12;
+            const startTime = Date.UTC(eventPopUpDate.current.year, eventPopUpDate.current.month, eventPopUpDate.current.day, startHour, startMin) + today.getTimezoneOffset() * 60 * 1000;
+            const endTime = Date.UTC(eventPopUpDate.current.year, eventPopUpDate.current.month, eventPopUpDate.current.day, endHour, endMin) + today.getTimezoneOffset() * 60 * 1000;
+            const eventData = {
+                start_time: startTime,
+                end_time: endTime,
+                title: formData.get('eventTitle'),
+                color: formData.get("colorSelectRadio")
+            };
+            handleSubmit(eventData);
         };
-        handleSubmit(eventData);
-    };
+        let colorArray = ["ffb300", "ff0000", "0000ff", "d90bd5", "0b8fd9", "d68a8a"];
       return (
         <form onSubmit={callAddEvent} className={styles.popupMenu} style={{ top: position.y, left: position.x }}>
             <input name="eventTitle" placeholder='Event Name'></input>
-            start time:
+            <label>start time:</label>
             <div className={styles.timeSelectContainer}>
               <select name="startHour">
                 {[...Array(12).keys()].map((i) => {
@@ -131,17 +133,17 @@ export default function Calendar() {
                 <option value="PM">PM</option>
               </select>
             </div>
-            end time:
+            <label>end time:</label>
             <div className={styles.timeSelectContainer}>
               <select name="endHour">
                 {[...Array(12).keys()].map((i) => {
-                  return <option key={i} value={i+1}>{i+1}</option>
+                    return <option key={i} value={i+1}>{i+1}</option>
                 })}
               </select>
               :
               <select name="endMin">
                 {[...Array(4).keys()].map((i) => {
-                  return <option key={i} value={i*15}>{String(i*15).padStart(2,'0')}</option>
+                    return <option key={i} value={i*15}>{String(i*15).padStart(2,'0')}</option>
                 })}
               </select>
               <select name="endAMPM">
@@ -149,21 +151,31 @@ export default function Calendar() {
                 <option value="PM">PM</option>
               </select>
             </div>
+            <label>color:</label>
+            <div className={styles.colorSelectContainer}>
+            {[...colorArray].map((color, i) => {return (<>
+                <div key={i} className={styles.colorSelectItem}>
+                    <input name="colorSelectRadio" type="radio" value={color}></input>
+                    <span style={{backgroundColor: "#"+color}}></span>
+                </div>
+            </>)})}
+            </div>
             <input type="submit" className={styles.monthSelectorItem} value="Add Event"></input>
         </form>
       );
     };
   
     async function createEvent(formData: {start_time: number, end_time: number, title: string, color: string}) {
-      setIsEventPopupVisible(false);
-      try {
-        const response = await fetch(`/api/events/add?start_time=${formData.start_time}&end_time=${formData.end_time}&title=${formData.title}`)
-        const data = await response.json();
-        formData.color = "ffb300";
-        setEventData([...eventData, formData]);
-      } catch (error) {
-        console.error('Error adding event:', error);
-      }
+        setIsEventPopupVisible(false);
+        try {
+            const response = await fetch(`/api/events/add?start_time=${formData.start_time}&end_time=${formData.end_time}&title=${formData.title}`)
+            if (!(formData.color)) {
+                formData.color = "ffb300";
+            }
+            setEventData([...eventData, formData]);
+        } catch (error) {
+            console.error('Error adding event:', error);
+        }
     }
   
     return (<>
