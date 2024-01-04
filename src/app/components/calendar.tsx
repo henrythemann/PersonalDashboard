@@ -1,7 +1,8 @@
 import styles from '../page.module.css'
-import { useRef, useState, useEffect, FormEvent } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import CalendarGrid from './calendar-grid';
 import CalendarHeader from './calendar-header';
+import EventPopup from './event-popup';
 import { Event, SplitDate } from '../interfaces';
 
 export default function Calendar() {
@@ -86,92 +87,10 @@ export default function Calendar() {
         eventPopupPosition.current.y = event.clientY;
     }
   
-    // TODO: add form validation on empty event names and end time before start time
-    const EventPopup = ({ position, handleSubmit }: {position: {x: number, y: number}, handleSubmit: Function}) => {
-        const callAddEvent = (event: FormEvent<HTMLFormElement>) => {
-            event.preventDefault();
-            const formData = new FormData(event.currentTarget);
-            let startHour = +(formData.get('startHour') ?? 0);
-            let startMin = +(formData.get('startMin') ?? 0);
-            let startAMPM = formData.get('startAMPM');
-            let endHour = +(formData.get('endHour') ?? 0);
-            let endMin = +(formData.get('endMin') ?? 0);
-            let endAMPM = formData.get('endAMPM');
-            if (startHour === 12 && startAMPM === 'AM') startHour = 0;
-            else if (startAMPM === 'PM') startHour += 12;
-            if (endHour === 12 && endAMPM === 'AM') endHour = 0;
-            else if (endAMPM === 'PM') endHour += 12;
-            const startTime = Date.UTC(eventPopUpDate.current.year, eventPopUpDate.current.month, eventPopUpDate.current.day, startHour, startMin) + today.getTimezoneOffset() * 60 * 1000;
-            const endTime = Date.UTC(eventPopUpDate.current.year, eventPopUpDate.current.month, eventPopUpDate.current.day, endHour, endMin) + today.getTimezoneOffset() * 60 * 1000;
-            const eventData = {
-                start_time: startTime,
-                end_time: endTime,
-                title: formData.get('eventTitle'),
-                color: formData.get("colorSelectRadio")
-            };
-            handleSubmit(eventData);
-        };
-        let colorArray = ["ffb300", "ff0000", "0000ff", "d90bd5", "0b8fd9", "d68a8a"];
-      return (
-        <form onSubmit={callAddEvent} className={styles.popupMenu} style={{ top: position.y, left: position.x }}>
-            <input name="eventTitle" placeholder='Event Name'></input>
-            <label>start time:</label>
-            <div className={styles.timeSelectContainer}>
-              <select name="startHour">
-                {[...Array(12).keys()].map((i) => {
-                  return <option key={i} value={i+1}>{i+1}</option>
-                })}
-              </select>
-              :
-              <select name="startMin">
-                {[...Array(4).keys()].map((i) => {
-                  return <option key={i} value={i*15}>{String(i*15).padStart(2,'0')}</option>
-                })}
-              </select>
-              <select name="startAMPM">
-                <option value="AM">AM</option>
-                <option value="PM">PM</option>
-              </select>
-            </div>
-            <label>end time:</label>
-            <div className={styles.timeSelectContainer}>
-              <select name="endHour">
-                {[...Array(12).keys()].map((i) => {
-                    return <option key={i} value={i+1}>{i+1}</option>
-                })}
-              </select>
-              :
-              <select name="endMin">
-                {[...Array(4).keys()].map((i) => {
-                    return <option key={i} value={i*15}>{String(i*15).padStart(2,'0')}</option>
-                })}
-              </select>
-              <select name="endAMPM">
-                <option value="AM">AM</option>
-                <option value="PM">PM</option>
-              </select>
-            </div>
-            <label>color:</label>
-            <div className={styles.colorSelectContainer}>
-            {[...colorArray].map((color, i) => {return (<>
-                <div key={i} className={styles.colorSelectItem}>
-                    <input name="colorSelectRadio" type="radio" value={color}></input>
-                    <span style={{backgroundColor: "#"+color}}></span>
-                </div>
-            </>)})}
-            </div>
-            <input type="submit" className={styles.monthSelectorItem} value="Add Event"></input>
-        </form>
-      );
-    };
-  
     async function createEvent(formData: {start_time: number, end_time: number, title: string, color: string}) {
         setIsEventPopupVisible(false);
         try {
-            const response = await fetch(`/api/events/add?start_time=${formData.start_time}&end_time=${formData.end_time}&title=${formData.title}`)
-            if (!(formData.color)) {
-                formData.color = "ffb300";
-            }
+            await fetch(`/api/events/add?start_time=${formData.start_time}&end_time=${formData.end_time}&title=${formData.title}&color=${formData.color ?? 'ffb300'}`)
             setEventData([...eventData, formData]);
         } catch (error) {
             console.error('Error adding event:', error);
@@ -185,7 +104,7 @@ export default function Calendar() {
         <CalendarGrid monthIndex={monthIndex} year={year} dayNames={dayNames} toggleEventPopup={toggleEventPopup} eventData={eventData} setEventData={setEventData}/>    
       </div>
       {isDatePopupVisible && <DatePopup position={getDatePopupPosition()} />}
-      {isEventPopupVisible && <EventPopup position={eventPopupPosition.current} handleSubmit={createEvent}/>}
+      {isEventPopupVisible && <EventPopup eventPopUpDate={eventPopUpDate} position={eventPopupPosition.current} handleSubmit={createEvent}/>}
     </>)
   }
   
