@@ -1,3 +1,4 @@
+import styles from '../page.module.css'
 import { useEffect, RefObject } from 'react';
 
 const useDraggable = (containerRef: RefObject<HTMLElement>, movingState: {moving: boolean, Xoffset: number, Yoffset: number}, setMovingState: Function, targetClass: string, excludeClass: string) => {
@@ -48,14 +49,22 @@ const useDraggable = (containerRef: RefObject<HTMLElement>, movingState: {moving
 
 const adjustPosition = (element: any, newTop: number, newLeft: number, docSize: DOMRect) => {
   if (newTop < 0) {
+    element.classList.add(styles.positionAnimate); 
     element.style.top = '0px';
+    setTimeout(() => {element.classList.remove(styles.positionAnimate);}, 200); 
   } else if (newTop + element.clientHeight > docSize.height) {
+    element.classList.add(styles.positionAnimate); 
     element.style.top = `${docSize.height - element.clientHeight - 5}px`;
+    setTimeout(() => {element.classList.remove(styles.positionAnimate);}, 200); 
   }
   if (newLeft < 0) {
+    element.classList.add(styles.positionAnimate); 
     element.style.left = '0px';
+    setTimeout(() => {element.classList.remove(styles.positionAnimate);}, 200); 
   } else if (newLeft + element.clientWidth > docSize.width) {
+    element.classList.add(styles.positionAnimate); 
     element.style.left = `${docSize.width - element.clientWidth - 5}px`;
+    setTimeout(() => {element.classList.remove(styles.positionAnimate);}, 200); 
   }
 };
 
