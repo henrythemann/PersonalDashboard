@@ -15,7 +15,8 @@ export default function Calendar() {
     const [isDatePopupVisible, setIsDatePopupVisible] = useState(false);
     const [datePopupContents, setDatePopupContents] = useState('');
     const titleButtonsRef = useRef<HTMLDivElement | null>(null);
-    const menuRef = useRef<HTMLDivElement | null>(null);
+    const datePopupRef = useRef<HTMLDivElement | null>(null);
+    const eventPopupRef = useRef<HTMLFormElement | null>(null);
     const [yearRange, setYearRange] = useState({ start: today.getFullYear()-10, end: today.getFullYear()+10 });
     const calendarContainer = useRef<HTMLDivElement | null>(null);
     const [isEventPopupVisible, setIsEventPopupVisible] = useState(false);
@@ -23,7 +24,7 @@ export default function Calendar() {
     const lastDatePopupClicked = useRef<HTMLButtonElement | null>(null);
     const yearButtonRef = useRef<HTMLButtonElement | null>(null);
     const monthButtonRef = useRef<HTMLButtonElement | null>(null);
-    const eventPopUpDate = useRef<SplitDate>({day: 0, month: 0, year: 0});
+    const eventPopupDate = useRef<SplitDate>({day: 0, month: 0, year: 0});
     const [eventData, setEventData] = useState<Event[]>([]);
   
     const handleYearLoad = (loadFutureYears: boolean) => {
@@ -33,7 +34,7 @@ export default function Calendar() {
     const DatePopup = ({ position }: {position: {top: number, left: number, width: number}}) => {
         return (
             <>
-            <div className={[styles.popupMenu, datePopupContents == 'year' ? styles.yearSelector : ''].join(' ')} ref={menuRef} style={{ top: position.top, left: position.left, minWidth: position.width }}>
+            <div className={[styles.popupMenu, datePopupContents == 'year' ? styles.yearSelector : ''].join(' ')} ref={datePopupRef} style={{ top: position.top, left: position.left, minWidth: position.width }}>
             {isDatePopupVisible && datePopupContents == 'month' && [...monthNames].map((month, i) => (
                 <button key={i} className={styles.monthSelectorItem} onClick={() => {
                     setMonthIndex(i);
@@ -66,23 +67,39 @@ export default function Calendar() {
         };
     };
     
+    // Close popups when clicking outside of them
     useEffect(() => {
+        console.log('useEffect');
         const handleClickOutside = (event: { target: any; }) => {
-            if (isDatePopupVisible && menuRef.current !== null && !(menuRef.current.contains(event.target)) && lastDatePopupClicked.current !== null && !(lastDatePopupClicked.current.contains(event.target))) {
+            if (isDatePopupVisible && datePopupRef.current && !datePopupRef.current.contains(event.target) && lastDatePopupClicked.current && !lastDatePopupClicked.current.contains(event.target)) {
                 setIsDatePopupVisible(false);
             }
-        };  
-        document.addEventListener('mousedown', handleClickOutside);
+            if (isEventPopupVisible && eventPopupRef.current && !eventPopupRef.current.contains(event.target)) {
+                setIsEventPopupVisible(false);
+            }
+        };
+        const handleKeyUp = (event: { key: string; }) => {
+            if (event.key === 'Escape') {
+                setIsDatePopupVisible(false);
+                setIsEventPopupVisible(false);
+            }
+        };
+        if (isDatePopupVisible || isEventPopupVisible) {
+            document.addEventListener('mousedown', handleClickOutside);
+            document.addEventListener('keyup', handleKeyUp);
+        }
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keyup', handleKeyUp);
         };
-    }, [isDatePopupVisible, menuRef]);
+    }, [isDatePopupVisible, isEventPopupVisible, datePopupRef, eventPopupRef, lastDatePopupClicked]);
+
   
     const toggleEventPopup = (day: number, month: number, year: number, event: {clientX: number, clientY: number}) => {
         setIsEventPopupVisible(!isEventPopupVisible);
-        eventPopUpDate.current.day = day;
-        eventPopUpDate.current.month = month;
-        eventPopUpDate.current.year = year;
+        eventPopupDate.current.day = day;
+        eventPopupDate.current.month = month;
+        eventPopupDate.current.year = year;
         eventPopupPosition.current.x = event.clientX;
         eventPopupPosition.current.y = event.clientY;
     }
@@ -104,7 +121,7 @@ export default function Calendar() {
         <CalendarGrid monthIndex={monthIndex} year={year} dayNames={dayNames} toggleEventPopup={toggleEventPopup} eventData={eventData} setEventData={setEventData}/>    
       </div>
       {isDatePopupVisible && <DatePopup position={getDatePopupPosition()} />}
-      {isEventPopupVisible && <EventPopup eventPopUpDate={eventPopUpDate} position={eventPopupPosition.current} handleSubmit={createEvent}/>}
+      {isEventPopupVisible && <EventPopup passedRef={eventPopupRef} eventPopUpDate={eventPopupDate} position={eventPopupPosition.current} handleSubmit={createEvent}/>}
     </>)
   }
   

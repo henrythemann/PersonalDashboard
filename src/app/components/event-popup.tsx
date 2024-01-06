@@ -3,7 +3,7 @@ import { RefObject, FormEvent, Fragment } from 'react';
 import { SplitDate } from '../interfaces';
 
 // TODO: add form validation on empty event names and end time before start time
-export default function EventPopup({ position, handleSubmit, eventPopUpDate }: {position: {x: number, y: number}, handleSubmit: Function, eventPopUpDate: RefObject<SplitDate>}) {
+export default function EventPopup({ position, handleSubmit, eventPopUpDate, passedRef }: {position: {x: number, y: number}, handleSubmit: Function, eventPopUpDate: RefObject<SplitDate>, passedRef: RefObject<HTMLFormElement>}) {
     const callAddEvent = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const today = new Date();
@@ -34,7 +34,7 @@ export default function EventPopup({ position, handleSubmit, eventPopUpDate }: {
     };
     let colorArray = ["ffb300", "ff0000", "0000ff", "d90bd5", "0b8fd9", "d68a8a"];
   return (
-    <form onSubmit={callAddEvent} className={styles.popupMenu} style={{ top: position.y, left: position.x }}>
+    <form ref={passedRef} onSubmit={callAddEvent} className={styles.popupMenu} style={{ top: position.y, left: position.x }}>
         <input name="eventTitle" placeholder='Event Name'></input>
         <label>start time:</label>
         <div className={styles.timeSelectContainer}>
