@@ -92,7 +92,7 @@ export default function Calendar() {
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('keyup', handleKeyUp);
         };
-    }, [isDatePopupVisible, isEventPopupVisible, datePopupRef, eventPopupRef, lastDatePopupClicked]);
+    }, [isDatePopupVisible, isEventPopupVisible]);
 
   
     const toggleEventPopup = (day: number, month: number, year: number, event: {clientX: number, clientY: number}) => {
