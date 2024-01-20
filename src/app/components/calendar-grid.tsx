@@ -2,6 +2,17 @@ import { useEffect } from "react";
 import styles from '../page.module.css';
 import { Event, Events } from '../interfaces';
 
+/**
+ * Renders a calendar grid component--the grid of days in a month.
+ *  
+ * @param {number} monthIndex - The index of the month (zero-indexed)
+ * @param {number} year - The year
+ * @param {string[]} dayNames - An array of day names
+ * @param {Function} toggleEventPopup - A function to toggle the event popup.
+ * @param {Event[]} eventData - An array of event data for the days in the grid.
+ * @param {Function} setEventData - A function to set the event data.
+ * @returns {JSX.Element} The calendar grid component.
+ */
 export default function CalendarGrid({monthIndex, year, dayNames, toggleEventPopup, eventData, setEventData}: {monthIndex: number, year: number, dayNames: string[], toggleEventPopup: Function, eventData: Event[], setEventData: Function}) {
     const date = new Date(year, monthIndex + 1, 0);
     const daysInMonth = date.getDate();
@@ -11,10 +22,13 @@ export default function CalendarGrid({monthIndex, year, dayNames, toggleEventPop
     const firstDayOfWeek = new Date(year, monthIndex, 1).getDay()
     let highlightDay =-1;
     const today = new Date();
+
+    // If the active month and year are today's month and year, highlight the current day
     if (year === today.getFullYear() && monthIndex === today.getMonth()) {
       highlightDay = today.getDate();
     }
   
+    // Fetch events for the active days in the grid (the current month and a few days on either side)
     useEffect(() => {
       async function fetchEvents() {
         let startUtcTimestamp = Date.UTC(year, monthIndex, 1) - firstDayOfWeek * 24 * 60 * 60 * 1000;
@@ -42,7 +56,8 @@ export default function CalendarGrid({monthIndex, year, dayNames, toggleEventPop
           let dayNumber = i;
           let monthOfDayNumber = monthIndex;
           let yearOfDayNumber = year;
-  
+          
+          // set the style and day number for each day in the grid so that the toggleEventPopup function can be called with the correct date
           if (i < 1) {
             style = [styles.calendarGridItem, styles.empty].join(' ');
             dayNumber = daysInPrevMonth + i;
@@ -56,6 +71,7 @@ export default function CalendarGrid({monthIndex, year, dayNames, toggleEventPop
             monthOfDayNumber = monthIndex === 11 ? 0 : monthIndex + 1;
             yearOfDayNumber = monthIndex === 11 ? year + 1 : year;
           }
+          // If there are events for the day, add them to the events object
           if (eventData.length) {
             for (let event of eventData) {
               if (event.start_time >= Date.UTC(yearOfDayNumber, monthOfDayNumber, dayNumber) && event.end_time < Date.UTC(yearOfDayNumber, monthOfDayNumber, dayNumber + 1) + today.getTimezoneOffset() * 60 * 1000) {
