@@ -1,7 +1,7 @@
 # PersonalDashboard
-A project I created to learn React.js
+A fun React.js project I created.
 
 Currently features a calendar widget and weather widget, but I plan to add more.
 
 # Calendar Limitations
-The calendar doesn't support multi-day events because my goal was to learn React, not to compete with Google Calendar. This lack of support for multi-day events becomes an issue if the user changes timezones. In this case, events may not show up.
+The calendar currently doesn't support multi-day events. This can become an issue if the user changes timezones. In this case, events may not show up.
